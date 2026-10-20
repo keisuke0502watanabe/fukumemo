@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>フクメモ</title>
+  <meta name="description" content="福岡大学生向けの非公式リンク集・時間割メモ（福岡大学非公認）">
+  <meta name="theme-color" content="#1f5fa8">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="フクメモ">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 非公認表示（常に表示・消せない） -->
+  <div class="unofficial" role="note">
+    このアプリは<strong>福岡大学非公認</strong>です。大学とは関係ありません。
+  </div>
+
+  <header class="appbar">
+    <h1 id="page-title">ホーム</h1>
+  </header>
+
+  <main id="main">
+    <!-- ホーム -->
+    <section id="tab-home" class="tab" data-title="ホーム">
+      <div class="card">
+        <div class="card-head">
+          <h2 id="today-label">今日の授業</h2>
+        </div>
+        <ul id="today-list" class="plain-list"></ul>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>締切が近い課題</h2>
+          <button class="link-btn" data-goto="tasks">すべて</button>
+        </div>
+        <ul id="upcoming-list" class="plain-list"></ul>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>よく使うリンク</h2>
+          <button class="link-btn" data-goto="links">すべて</button>
+        </div>
+        <div id="fav-links" class="link-grid"></div>
+      </div>
+    </section>
+
+    <!-- リンク集 -->
+    <section id="tab-links" class="tab" data-title="リンク" hidden>
+      <p class="hint">リンクは公式サイトをそのまま開きます。ログインは各サービスの画面で行ってください。フクメモはID・パスワードを預かりません。</p>
+      <div id="link-groups"></div>
+    </section>
+
+    <!-- 時間割 -->
+    <section id="tab-timetable" class="tab" data-title="時間割" hidden>
+      <p class="hint">コマをタップして授業名・教室・メモを入力します。データはこの端末の中だけに保存されます。</p>
+      <div class="tt-wrap">
+        <table id="timetable" class="timetable"></table>
+      </div>
+    </section>
+
+    <!-- 課題メモ -->
+    <section id="tab-tasks" class="tab" data-title="課題" hidden>
+      <form id="task-form" class="card task-form">
+        <input id="task-title" type="text" placeholder="課題・やること" required maxlength="100">
+        <div class="row">
+          <input id="task-course" type="text" placeholder="授業名（任意）" maxlength="50">
+          <input id="task-due" type="date">
+        </div>
+        <button type="submit" class="primary">追加</button>
+      </form>
+      <ul id="task-list" class="task-list"></ul>
+      <button id="clear-done" class="secondary" type="button">完了した課題を消す</button>
+    </section>
+
+    <!-- 設定 -->
+    <section id="tab-settings" class="tab" data-title="設定" hidden>
+      <div class="card">
+        <h2>このアプリについて</h2>
+        <p>フクメモは、福岡大学の学生向けに作られた<strong>非公式</strong>のリンク集・メモアプリです。福岡大学および情報基盤センターの公認・承認を受けたものではありません。</p>
+        <p>大学のシステムに関する問い合わせは、大学の公式窓口へお願いします。</p>
+      </div>
+      <div class="card">
+        <h2>データとプライバシー</h2>
+        <ul class="bullets">
+          <li>時間割・課題メモは、この端末のブラウザ内（localStorage）にだけ保存されます。</li>
+          <li>ID・パスワードなどの認証情報は扱いません。外部のサーバーへ何も送信しません。</li>
+          <li>ブラウザのデータを消すとメモも消えます。必要なら書き出してください。</li>
+        </ul>
+        <div class="btn-row">
+          <button id="export-btn" class="secondary" type="button">ファイルに書き出す</button>
+          <button id="copy-btn" class="secondary" type="button">データをコピー</button>
+          <label class="secondary file-btn">ファイルを読み込む<input id="import-file" type="file" accept="application/json,.json" hidden></label>
+        </div>
+        <textarea id="copy-fallback" class="copy-fallback" rows="3" readonly hidden aria-label="コピー用のデータ"></textarea>
+        <button id="reset-btn" class="danger" type="button">すべてのデータを消す</button>
+      </div>
+      <div class="card">
+        <h2>時間割の設定</h2>
+        <label class="check"><input id="show-sat" type="checkbox"> 土曜日を表示</label>
+        <label class="inline">表示する時限
+          <select id="period-count">
+            <option>5</option><option>6</option><option>7</option>
+          </select>
+        </label>
+      </div>
+      <p class="version">フクメモ v0.1.0（プロトタイプ）</p>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="タブ">
+    <button data-tab="home" aria-current="page"><span class="ic">🏠</span>ホーム</button>
+    <button data-tab="links"><span class="ic">🔗</span>リンク</button>
+    <button data-tab="timetable"><span class="ic">📅</span>時間割</button>
+    <button data-tab="tasks"><span class="ic">✅</span>課題</button>
+    <button data-tab="settings"><span class="ic">⚙️</span>設定</button>
+  </nav>
+
+  <!-- 時間割コマ編集 -->
+  <dialog id="cell-dialog">
+    <form method="dialog" id="cell-form">
+      <h2 id="cell-dialog-title">月曜 1限</h2>
+      <label>授業名<input id="cell-name" type="text" maxlength="50"></label>
+      <label>教室<input id="cell-room" type="text" maxlength="30"></label>
+      <label>メモ<textarea id="cell-note" rows="3" maxlength="300"></textarea></label>
+      <div class="btn-row">
+        <button value="clear" class="danger" type="submit">空にする</button>
+        <button value="cancel" class="secondary" type="submit" formnovalidate>キャンセル</button>
+        <button value="save" class="primary" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 確認ダイアログ（confirm() の代わり） -->
+  <dialog id="confirm-dialog">
+    <p id="confirm-message"></p>
+    <div class="btn-row">
+      <button id="confirm-cancel" class="secondary" type="button">キャンセル</button>
+      <button id="confirm-ok" class="danger" type="button">OK</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

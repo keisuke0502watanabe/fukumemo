@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1f5fa8"/>
+  <rect x="120" y="104" width="272" height="320" rx="28" fill="#ffffff"/>
+  <rect x="164" y="172" width="184" height="20" rx="10" fill="#1f5fa8"/>
+  <rect x="164" y="232" width="184" height="20" rx="10" fill="#9bbbe3"/>
+  <rect x="164" y="292" width="120" height="20" rx="10" fill="#9bbbe3"/>
+  <circle cx="352" cy="376" r="56" fill="#f2b632"/>
+  <text x="352" y="398" text-anchor="middle" font-family="Hiragino Sans, sans-serif" font-size="64" font-weight="700" fill="#1f5fa8">フ</text>
+</svg>
