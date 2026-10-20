@@ -20,7 +20,8 @@ const LINK_GROUPS = [
   {
     title: "図書館",
     links: [
-      { id: "library", name: "図書館", desc: "蔵書検索・貸出状況", url: "https://www.lib.fukuoka-u.ac.jp/", verified: false, fav: true },
+      // 2026-10-20 渡邊さん確認
+      { id: "library", name: "図書館", desc: "蔵書検索・貸出状況", url: "https://www.lib.fukuoka-u.ac.jp/", verified: true, fav: true },
     ],
   },
   {
