@@ -6,7 +6,8 @@ const LINK_GROUPS = [
     title: "授業・学務",
     links: [
       { id: "portal", name: "FUポータル", desc: "履修・成績・休講などの学務情報", url: "https://portal.fukuoka-u.ac.jp/", verified: true, fav: true },
-      { id: "moodle", name: "Moodle", desc: "授業支援システム", url: null, verified: false, fav: true },
+      // 2026-10-20 渡邊さん確認
+      { id: "moodle", name: "Moodle", desc: "授業支援システム", url: "https://fukuoka-u.resonantlms.com/", verified: true, fav: true },
     ],
   },
   {

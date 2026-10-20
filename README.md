@@ -43,7 +43,7 @@ Artifact では Service Worker・ファイルの書き出しが使えないた�
 | `manifest.webmanifest`, `icons/` | ホーム画面追加用 |
 
 ## 未確認（要調査）
-- [ ] Moodle の URL（`data.js` で `url: null`）
+- [x] Moodle の URL → https://fukuoka-u.resonantlms.com/
 - [ ] 図書館の URL（`https://www.lib.fukuoka-u.ac.jp/` と仮置き、`verified: false`）
 - [ ] 時限の時刻（`data.js` の `PERIODS`、仮の値）
 - [ ] 公開情報（ニュース・学年暦・バス・学食）の取得元と利用条件。当面は公式サイトへのリンクのみ
