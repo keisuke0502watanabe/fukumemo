@@ -26,25 +26,32 @@
   <main id="main">
     <!-- ホーム -->
     <section id="tab-home" class="tab" data-title="ホーム">
-      <div class="card">
-        <div class="card-head">
-          <h2 id="today-label">今日の授業</h2>
+      <!-- 並び順・表示は設定の「ホームのパネル」で変える。app.js が並べ直す -->
+      <div id="home-panels">
+        <div class="card" data-panel="today">
+          <div class="card-head">
+            <h2 id="today-label">今日の授業</h2>
+          </div>
+          <ul id="today-list" class="plain-list"></ul>
         </div>
-        <ul id="today-list" class="plain-list"></ul>
+        <div class="card" data-panel="tasks">
+          <div class="card-head">
+            <h2>締切が近い課題</h2>
+            <button class="link-btn" data-goto="tasks">すべて</button>
+          </div>
+          <ul id="upcoming-list" class="plain-list"></ul>
+        </div>
+        <div class="card" data-panel="favs">
+          <div class="card-head">
+            <h2>よく使うリンク</h2>
+            <button class="link-btn" data-goto="links">すべて</button>
+          </div>
+          <div id="fav-links" class="link-grid"></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-head">
-          <h2>締切が近い課題</h2>
-          <button class="link-btn" data-goto="tasks">すべて</button>
-        </div>
-        <ul id="upcoming-list" class="plain-list"></ul>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <h2>よく使うリンク</h2>
-          <button class="link-btn" data-goto="links">すべて</button>
-        </div>
-        <div id="fav-links" class="link-grid"></div>
+      <div class="btn-row center">
+        <button class="secondary" type="button" data-add-panel>＋ パネルを追加</button>
+        <button class="secondary" type="button" data-goto="settings">並べ替え</button>
       </div>
     </section>
 
@@ -79,6 +86,12 @@
     <!-- 設定 -->
     <section id="tab-settings" class="tab" data-title="設定" hidden>
       <div class="card">
+        <h2>ホームのパネル</h2>
+        <p class="hint">チェックを外すとホームに出しません。↑↓ で並び順を変えます。</p>
+        <ul id="panel-order" class="order-list"></ul>
+        <button class="secondary" type="button" data-add-panel>＋ パネルを追加</button>
+      </div>
+      <div class="card">
         <h2>このアプリについて</h2>
         <p>フクメモは、福岡大学の学生向けに作られた<strong>非公式</strong>のリンク集・メモアプリです。福岡大学および情報基盤センターの公認・承認を受けたものではありません。</p>
         <p>大学のシステムに関する問い合わせは、大学の公式窓口へお願いします。</p>
@@ -107,7 +120,7 @@
           </select>
         </label>
       </div>
-      <p class="version">フクメモ v0.1.0（プロトタイプ）</p>
+      <p class="version">フクメモ v0.2.0（プロトタイプ）</p>
     </section>
   </main>
 
@@ -128,6 +141,22 @@
       <label>メモ<textarea id="cell-note" rows="3" maxlength="300"></textarea></label>
       <div class="btn-row">
         <button value="clear" class="danger" type="submit">空にする</button>
+        <button value="cancel" class="secondary" type="submit" formnovalidate>キャンセル</button>
+        <button value="save" class="primary" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- パネル編集 -->
+  <dialog id="panel-dialog">
+    <form method="dialog" id="panel-form">
+      <h2 id="panel-dialog-title">パネルを追加</h2>
+      <label>パネルの名前<input id="panel-title" type="text" maxlength="30" placeholder="例：ポータル（成績・履修）"></label>
+      <p class="hint">開いているページの URL をコピーして貼り付けます。FUポータルの画面は、ログインしてからその画面が開きます。</p>
+      <ul id="panel-links" class="link-rows"></ul>
+      <button id="panel-add-link" class="link-btn" type="button">＋ リンクを追加</button>
+      <div class="btn-row">
+        <button id="panel-delete" value="delete" class="danger" type="submit" formnovalidate>パネルを消す</button>
         <button value="cancel" class="secondary" type="submit" formnovalidate>キャンセル</button>
         <button value="save" class="primary" type="submit">保存</button>
       </div>

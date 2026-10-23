@@ -1,6 +1,12 @@
 // フクメモの静的データ（リンク集・時限）
 // verified: false のものは URL が未確認。公式サイトで確認してから true にする。
 
+// FUポータルの画面はログインしないと開けない（直接開くと /AC/error/ に飛ぶ）。
+// 利用者が登録したポータルの URL は、ログイン入口に ?next=<画面のパス> を付けて開く。ログイン後にその画面へ戻る。
+// （2026-10-23 確認：next は SAML の RelayState に渡る。/AC/ 以外の URL は大学側で無視される）
+const PORTAL_HOST = "acpt.jsysneo.fukuoka-u.ac.jp";
+const PORTAL_LOGIN = "https://acpt.jsysneo.fukuoka-u.ac.jp/AC/saml2/login/?next=";
+
 const LINK_GROUPS = [
   {
     title: "授業・学務",

@@ -7,6 +7,8 @@ const defaultState = () => ({
   timetable: {},          // "曜日index-時限" → { name, room, note }
   tasks: [],              // { id, title, course, due, done, createdAt }
   settings: { showSat: false, periodCount: 5 },
+  panels: [],             // 自分で作るパネル { id, title, links: [{ id, name, url }] }
+  home: [],               // ホームの並び順と表示 [{ key, show }]。key は組み込みの名前か "p:<パネルid>"
 });
 
 function loadState() {
@@ -45,6 +47,8 @@ function el(tag, attrs = {}, ...children) {
   }
   return node;
 }
+
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
 function todayISO() {
   const d = new Date();
@@ -154,7 +158,180 @@ function renderHome() {
 
   const favs = LINK_GROUPS.flatMap((g) => g.links).filter((l) => l.fav);
   $("#fav-links").replaceChildren(...favs.map(linkTile));
+
+  // パネルを並び順どおりに置き直す（組み込みのカードは index.html にあるものを動かす）
+  const root = $("#home-panels");
+  root.replaceChildren(
+    ...homeLayout().map(({ key, show }) => {
+      const card = key.startsWith("p:") ? customPanelCard(state.panels.find((p) => `p:${p.id}` === key)) : $(`[data-panel="${key}"]`);
+      card.hidden = !show;
+      return card;
+    })
+  );
 }
+
+// ---------- パネル ----------
+const BUILTIN_PANELS = [
+  { key: "today", title: "今日の授業" },
+  { key: "tasks", title: "締切が近い課題" },
+  { key: "favs", title: "よく使うリンク" },
+];
+
+// 保存されている並び順に、足りないパネルを足し、消えたパネルを除く
+function homeLayout() {
+  const keys = [...BUILTIN_PANELS.map((b) => b.key), ...state.panels.map((p) => `p:${p.id}`)];
+  const saved = (state.home || []).filter((h) => keys.includes(h.key));
+  const missing = keys.filter((k) => !saved.some((h) => h.key === k)).map((key) => ({ key, show: true }));
+  return [...saved, ...missing];
+}
+
+function panelTitle(key) {
+  if (key.startsWith("p:")) return state.panels.find((p) => `p:${p.id}` === key)?.title || "（名前なし）";
+  return BUILTIN_PANELS.find((b) => b.key === key).title;
+}
+
+// 入力された URL を開ける形にする。http(s) 以外（javascript: など）は受け付けない
+function normalizeUrl(raw) {
+  const s = raw.trim();
+  if (!s) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(s) ? s : `https://${s}`);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+// ポータルの画面はログイン入口を経由して開く（data.js の PORTAL_LOGIN を参照）
+function openUrl(url) {
+  const u = new URL(url);
+  if (u.hostname === PORTAL_HOST && u.pathname.startsWith("/AC/") && !u.pathname.startsWith("/AC/saml2/")) {
+    return PORTAL_LOGIN + encodeURIComponent(u.pathname + u.search);
+  }
+  return url;
+}
+
+function customPanelCard(panel) {
+  const links = panel.links.map((l) =>
+    el("a", { class: "link-tile", href: openUrl(l.url), target: "_blank", rel: "noopener noreferrer" },
+      el("span", { class: "name" }, l.name || new URL(l.url).hostname),
+      el("span", { class: "desc" }, new URL(l.url).hostname)
+    )
+  );
+  return el("div", { class: "card" },
+    el("div", { class: "card-head" },
+      el("h2", {}, panel.title || "（名前なし）"),
+      el("button", { class: "link-btn", type: "button", onclick: () => openPanel(panel.id) }, "編集")
+    ),
+    links.length
+      ? el("div", { class: "link-grid" }, links)
+      : el("p", { class: "empty" }, "「編集」からリンクを追加してください。")
+  );
+}
+
+function moveHome(key, dir) {
+  const list = homeLayout();
+  const i = list.findIndex((h) => h.key === key);
+  const j = i + dir;
+  if (j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  state.home = list;
+  saveState();
+  renderPanelSettings();
+}
+
+function renderPanelSettings() {
+  const list = homeLayout();
+  $("#panel-order").replaceChildren(
+    ...list.map((h, i) =>
+      el("li", {},
+        el("label", { class: "check" },
+          el("input", {
+            type: "checkbox",
+            checked: h.show,
+            onchange: (e) => {
+              state.home = homeLayout().map((x) => (x.key === h.key ? { ...x, show: e.target.checked } : x));
+              saveState();
+            },
+          }),
+          panelTitle(h.key)
+        ),
+        el("span", { class: "order-btns" },
+          h.key.startsWith("p:") ? el("button", { class: "link-btn", type: "button", onclick: () => openPanel(h.key.slice(2)) }, "編集") : null,
+          el("button", { type: "button", class: "secondary icon", "aria-label": "上へ", disabled: i === 0, onclick: () => moveHome(h.key, -1) }, "↑"),
+          el("button", { type: "button", class: "secondary icon", "aria-label": "下へ", disabled: i === list.length - 1, onclick: () => moveHome(h.key, 1) }, "↓")
+        )
+      )
+    )
+  );
+}
+
+// パネルの編集ダイアログ。id が null なら新しいパネル
+let editingPanelId = null;
+
+function linkRow(l = {}) {
+  return el("li", { class: "link-row" },
+    el("input", { type: "text", class: "ln", placeholder: "名前（例：成績）", maxlength: "40", value: l.name || "" }),
+    el("input", { type: "text", class: "lu", placeholder: "URL", inputmode: "url", autocapitalize: "off", value: l.url || "" }),
+    el("button", { type: "button", class: "del", "aria-label": "このリンクを消す", onclick: (e) => e.target.closest("li").remove() }, "×")
+  );
+}
+
+function openPanel(id) {
+  editingPanelId = id;
+  const p = state.panels.find((x) => x.id === id) || { title: "", links: [] };
+  $("#panel-dialog-title").textContent = id ? "パネルを編集" : "パネルを追加";
+  $("#panel-title").value = p.title;
+  $("#panel-links").replaceChildren(...(p.links.length ? p.links : [{}]).map(linkRow));
+  $("#panel-delete").hidden = !id;
+  $("#panel-dialog").showModal();
+}
+
+$("#panel-add-link").addEventListener("click", () => {
+  const row = linkRow();
+  $("#panel-links").append(row);
+  row.querySelector("input").focus();
+});
+
+$("#panel-form").addEventListener("submit", async (e) => {
+  const action = e.submitter ? e.submitter.value : "save";
+  if (action === "delete") {
+    e.preventDefault();
+    const p = state.panels.find((x) => x.id === editingPanelId);
+    if (!(await askConfirm(`パネル「${p.title || "（名前なし）"}」を消しますか？`, "消す"))) return;
+    state.panels = state.panels.filter((x) => x.id !== editingPanelId);
+    state.home = homeLayout();
+  } else if (action === "save") {
+    const links = [];
+    for (const row of $("#panel-links").children) {
+      const name = row.querySelector(".ln").value.trim();
+      const raw = row.querySelector(".lu").value;
+      if (!raw.trim() && !name) continue;
+      const url = normalizeUrl(raw);
+      if (!url) {
+        e.preventDefault();
+        row.querySelector(".lu").focus();
+        return toast("URL を確かめてください（https:// で始まるもの）。");
+      }
+      const old = state.panels.find((x) => x.id === editingPanelId)?.links.find((l) => l.url === url);
+      links.push({ id: old?.id || newId(), name, url });
+    }
+    const title = $("#panel-title").value.trim() || "マイリンク";
+    const p = state.panels.find((x) => x.id === editingPanelId);
+    if (p) Object.assign(p, { title, links });
+    else state.panels.push({ id: newId(), title, links });
+  } else {
+    editingPanelId = null;
+    return;
+  }
+  editingPanelId = null;
+  $("#panel-dialog").close();
+  saveState();
+  renderHome();
+  renderPanelSettings();
+});
+
+document.querySelectorAll("[data-add-panel]").forEach((b) => b.addEventListener("click", () => openPanel(null)));
 
 // ---------- 時間割 ----------
 let editingKey = null;
@@ -253,7 +430,7 @@ $("#task-form").addEventListener("submit", (e) => {
   const title = $("#task-title").value.trim();
   if (!title) return;
   state.tasks.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: newId(),
     title,
     course: $("#task-course").value.trim(),
     due: $("#task-due").value || null,
@@ -339,7 +516,7 @@ $("#import-file").addEventListener("change", async (e) => {
 });
 
 $("#reset-btn").addEventListener("click", async () => {
-  if (!(await askConfirm("時間割・課題・設定をすべて消します。元に戻せません。", "すべて消す"))) return;
+  if (!(await askConfirm("時間割・課題・パネル・設定をすべて消します。元に戻せません。", "すべて消す"))) return;
   try { localStorage.removeItem(STORE_KEY); } catch {}
   state = defaultState();
   syncSettingsForm();
@@ -386,6 +563,7 @@ function renderAll() {
   renderTimetable();
   renderTasks();
   renderHome();
+  renderPanelSettings();
 }
 
 renderAll();
