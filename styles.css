@@ -92,18 +92,26 @@ main { padding-block: 8px 24px; }
 .link-btn { background: none; border: 0; color: var(--accent); font-size: 14px; cursor: pointer; padding: 0; }
 
 /* リンク */
-.link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+/* リンクは 1 行ずつのリスト（名前・説明・›） */
+.link-grid { display: flex; flex-direction: column; }
+#link-groups .link-grid { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; }
 .link-tile {
-  display: block;
-  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--text);
   text-decoration: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  min-height: 64px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  min-height: 44px;
 }
-.link-tile .name { font-weight: 600; display: block; }
-.link-tile .desc { color: var(--muted); font-size: 12px; display: block; }
+.link-tile:first-child { border-top: 0; }
+.link-tile::after { content: "›"; color: var(--muted); font-size: 20px; line-height: 1; }
+.link-tile.disabled::after { content: none; }
+.link-tile .name { font-weight: 600; flex: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-tile .desc { color: var(--muted); font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.link-tile .badge { margin-top: 0; flex: none; }
+.link-tile:hover .name { color: var(--accent); }
 .link-tile.disabled { opacity: .6; }
 .btn-row.center { justify-content: center; }
 .order-list { list-style: none; margin: 0 0 8px; padding: 0; }
