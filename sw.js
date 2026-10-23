@@ -1,6 +1,6 @@
 // オフライン用：アプリ本体のファイルだけをキャッシュする。
 // 大学サイトへのリクエストには一切関与しない（同一オリジンのみ扱う）。
-const CACHE = "fukumemo-v6";
+const CACHE = "fukumemo-v7";
 const ASSETS = [
   "./",
   "index.html",

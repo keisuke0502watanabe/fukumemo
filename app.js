@@ -329,7 +329,20 @@ function renderPortal() {
   const more = $("#portal-more");
   more.hidden = shown.length === hits.length;
   more.textContent = `すべて表示（あと ${hits.length - shown.length} 件）`;
+
+  // 教職員向けを隠しているときは、その件数と表示ボタンを出す（設定を探さなくて済むように）
+  const staff = $("#portal-staff");
+  staff.hidden = state.settings.showStaff;
+  staff.textContent = `教職員向け ${PORTAL_LINKS.filter((l) => l.staff).length} 件を表示（給与・出張申請・研究費など）`;
 }
+
+$("#portal-staff").addEventListener("click", () => {
+  state.settings.showStaff = true;
+  saveState();
+  syncSettingsForm();
+  renderPortal();
+  toast("教職員向けのリンクを表示しました。設定でいつでも隠せます。");
+});
 
 function portalRow(l) {
   const starred = state.portal.stars.includes(l.id);

@@ -126,7 +126,7 @@ const PORTAL_LINKS = [
   { id: "researchmap-manual", name: "researchmap 利用マニュアル", tags: ["研究"], url: "https://researchmap.jp/public/inquiry", staff: true },
   { id: "profile-edit", name: "教員プロフィール情報管理", tags: ["研究"], url: null, staff: true },
   { id: "profile-manual", name: "教員プロフィール操作マニュアル", tags: ["研究"], url: null, staff: true },
-  { id: "kenkyuhi", name: "研究推進部・研究費管理", tags: ["研究"], url: null, staff: true },
+  { id: "kenkyuhi", name: "研究推進部（研究推進課）・研究費管理", tags: ["研究"], url: null, staff: true },
   { id: "yakuhin", name: "薬品管理システム", tags: ["研究"], url: null, staff: true },
   // 相談・安全
   { id: "toiawase", name: "システムに関する問合せ先", tags: ["相談・安全"], url: "https://acsf.jsysneo.fukuoka-u.ac.jp/kyoutu/portal/contactlist.htm" },
@@ -155,7 +155,7 @@ const PORTAL_LINKS = [
   { id: "shukkin", name: "出勤管理システム", tags: ["教職員事務"], url: null, staff: true },
   { id: "fukuri", name: "福利厚生制度（私学共済・法人・子育て介護・健康増進）", tags: ["教職員事務"], url: null, staff: true },
   { id: "zaimu", name: "財務会計システム（調達申請／承認）", tags: ["教職員事務"], url: null, staff: true },
-  { id: "ryohi", name: "旅費システム（Web旅費）", tags: ["教職員事務"], url: null, staff: true },
+  { id: "ryohi", name: "出張申請・精算・承認（旅費システム Web旅費）", tags: ["教職員事務"], url: null, staff: true },
   { id: "kenko-staff", name: "教職員健康管理・健康診断結果閲覧", tags: ["教職員事務"], url: null, staff: true },
   { id: "fdsd", name: "FD・SD研修", tags: ["教職員事務"], url: "https://fukuoka-u.resonantlms.com/", staff: true },
   { id: "template", name: "福岡大学オリジナルテンプレート", tags: ["教職員事務"], url: null, staff: true },
