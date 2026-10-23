@@ -254,3 +254,28 @@ dialog .btn-row { justify-content: flex-end; }
 .tabbar .ic { font-size: 20px; line-height: 1.1; }
 .tabbar button[aria-current=page] { color: var(--accent); font-weight: 600; }
 #panel-delete { margin-right: auto; }
+
+/* FUポータルのパネル */
+.muted-note { color: var(--muted); font-size: 13px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; margin: 0 -2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.portal-row { display: flex; align-items: center; border-top: 1px solid var(--line); }
+.portal-row:first-child { border-top: 0; }
+.portal-row .link-tile { flex: 1; min-width: 0; border-top: 0; }
+.portal-row .star { background: none; border: 0; padding: 8px 0 8px 10px; font-size: 20px; line-height: 1; color: var(--muted); }
+.portal-row .star.on { color: #e0a800; }
+.link-btn.more { display: block; margin: 8px auto 0; }
+.portal-row .name { flex: 1; max-width: none; white-space: normal; line-height: 1.4; }
+.portal-row .desc { flex: none; max-width: 30%; }
+@media (max-width: 520px) { .portal-row .desc { display: none; } }
+.badge.via { background: var(--accent-soft); color: var(--accent); }

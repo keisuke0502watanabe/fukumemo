@@ -41,6 +41,15 @@
           </div>
           <ul id="upcoming-list" class="plain-list"></ul>
         </div>
+        <div class="card" data-panel="portal">
+          <div class="card-head">
+            <h2>FUポータル</h2>
+            <span class="muted-note" id="portal-count"></span>
+          </div>
+          <div id="portal-tags" class="chips" role="group" aria-label="タグで絞り込む"></div>
+          <div id="portal-list" class="link-grid"></div>
+          <button id="portal-more" class="link-btn more" type="button" hidden></button>
+        </div>
         <div class="card" data-panel="favs">
           <div class="card-head">
             <h2>よく使うリンク</h2>
@@ -88,6 +97,7 @@
       <div class="card">
         <h2>ホームのパネル</h2>
         <p class="hint">チェックを外すとホームに出しません。↑↓ で並び順を変えます。</p>
+        <label class="check"><input id="auto-order" type="checkbox"> よく使うパネルを自動で上に出す</label>
         <ul id="panel-order" class="order-list"></ul>
         <button class="secondary" type="button" data-add-panel>＋ パネルを追加</button>
       </div>
@@ -112,6 +122,12 @@
         <button id="reset-btn" class="danger" type="button">すべてのデータを消す</button>
       </div>
       <div class="card">
+        <h2>FUポータルのパネル</h2>
+        <label class="check"><input id="show-staff" type="checkbox"> 教職員向けのリンクも表示する</label>
+        <p class="hint">☆ を押すとお気に入りになり、いちばん上に出ます。そのあとは、よく押すリンクほど上に出ます。</p>
+        <button id="portal-reset-uses" class="secondary" type="button">押した回数をリセット</button>
+      </div>
+      <div class="card">
         <h2>時間割の設定</h2>
         <label class="check"><input id="show-sat" type="checkbox"> 土曜日を表示</label>
         <label class="inline">表示する時限
@@ -120,7 +136,7 @@
           </select>
         </label>
       </div>
-      <p class="version">フクメモ v0.2.0（プロトタイプ）</p>
+      <p class="version">フクメモ v0.3.0（プロトタイプ）</p>
     </section>
   </main>
 

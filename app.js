@@ -6,17 +6,24 @@ const STORE_KEY = "fukumemo.v1";
 const defaultState = () => ({
   timetable: {},          // "曜日index-時限" → { name, room, note }
   tasks: [],              // { id, title, course, due, done, createdAt }
-  settings: { showSat: false, periodCount: 5 },
+  settings: { showSat: false, periodCount: 5, showStaff: false, autoOrder: false },
+  portal: { tag: "", stars: [], uses: {} },   // FUポータルのパネル：選んだタグ・★・押した回数
+  panelUses: {},          // ホームのパネルごとに、中のリンクを押した回数
   panels: [],             // 自分で作るパネル { id, title, links: [{ id, name, url }] }
   home: [],               // ホームの並び順と表示 [{ key, show }]。key は組み込みの名前か "p:<パネルid>"
 });
+
+function mergeState(s) {
+  const d = defaultState();
+  return { ...d, ...s, settings: { ...d.settings, ...s.settings }, portal: { ...d.portal, ...s.portal } };
+}
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return defaultState();
     const s = JSON.parse(raw);
-    return { ...defaultState(), ...s, settings: { ...defaultState().settings, ...s.settings } };
+    return mergeState(s);
   } catch {
     return defaultState();
   }
@@ -161,8 +168,9 @@ function renderHome() {
 
   // パネルを並び順どおりに置き直す（組み込みのカードは index.html にあるものを動かす）
   const root = $("#home-panels");
+  renderPortal();
   root.replaceChildren(
-    ...homeLayout().map(({ key, show }) => {
+    ...orderedHome().map(({ key, show }) => {
       const card = key.startsWith("p:") ? customPanelCard(state.panels.find((p) => `p:${p.id}` === key)) : $(`[data-panel="${key}"]`);
       card.hidden = !show;
       return card;
@@ -174,6 +182,7 @@ function renderHome() {
 const BUILTIN_PANELS = [
   { key: "today", title: "今日の授業" },
   { key: "tasks", title: "締切が近い課題" },
+  { key: "portal", title: "FUポータル" },
   { key: "favs", title: "よく使うリンク" },
 ];
 
@@ -183,6 +192,14 @@ function homeLayout() {
   const saved = (state.home || []).filter((h) => keys.includes(h.key));
   const missing = keys.filter((k) => !saved.some((h) => h.key === k)).map((key) => ({ key, show: true }));
   return [...saved, ...missing];
+}
+
+// 「よく使うパネルを自動で上に出す」がオンなら、押した回数の多い順（同じなら手動の並び順）
+function orderedHome() {
+  const list = homeLayout();
+  if (!state.settings.autoOrder) return list;
+  const uses = (k) => state.panelUses[k] || 0;
+  return list.map((h, i) => ({ h, i })).sort((a, b) => uses(b.h.key) - uses(a.h.key) || a.i - b.i).map((x) => x.h);
 }
 
 function panelTitle(key) {
@@ -218,7 +235,7 @@ function customPanelCard(panel) {
       el("span", { class: "desc" }, new URL(l.url).hostname)
     )
   );
-  return el("div", { class: "card" },
+  return el("div", { class: "card", "data-panel": `p:${panel.id}` },
     el("div", { class: "card-head" },
       el("h2", {}, panel.title || "（名前なし）"),
       el("button", { class: "link-btn", type: "button", onclick: () => openPanel(panel.id) }, "編集")
@@ -258,13 +275,106 @@ function renderPanelSettings() {
         ),
         el("span", { class: "order-btns" },
           h.key.startsWith("p:") ? el("button", { class: "link-btn", type: "button", onclick: () => openPanel(h.key.slice(2)) }, "編集") : null,
-          el("button", { type: "button", class: "secondary icon", "aria-label": "上へ", disabled: i === 0, onclick: () => moveHome(h.key, -1) }, "↑"),
-          el("button", { type: "button", class: "secondary icon", "aria-label": "下へ", disabled: i === list.length - 1, onclick: () => moveHome(h.key, 1) }, "↓")
+          el("button", { type: "button", class: "secondary icon", "aria-label": "上へ", disabled: state.settings.autoOrder || i === 0, onclick: () => moveHome(h.key, -1) }, "↑"),
+          el("button", { type: "button", class: "secondary icon", "aria-label": "下へ", disabled: state.settings.autoOrder || i === list.length - 1, onclick: () => moveHome(h.key, 1) }, "↓")
         )
       )
     )
   );
 }
+
+// ---------- FUポータルのパネル ----------
+const PORTAL_PAGE = 8;   // 絞り込みなしのときに最初に見せる件数
+let portalExpanded = false;
+
+function portalUrl(link) {
+  return link.url ? openUrl(link.url) : PORTAL_LOGIN + encodeURIComponent(PORTAL_TOP_PATH);
+}
+
+// ★ → 押した回数 → data.js の並び順
+function portalLinks() {
+  const stars = state.portal.stars;
+  const uses = (l) => state.portal.uses[l.id] || 0;
+  return PORTAL_LINKS
+    .map((l, i) => ({ l, i }))
+    .filter(({ l }) => state.settings.showStaff || !l.staff)
+    .sort((a, b) => stars.includes(b.l.id) - stars.includes(a.l.id) || uses(b.l) - uses(a.l) || a.i - b.i)
+    .map(({ l }) => l);
+}
+
+function renderPortal() {
+  const all = portalLinks();
+  const tags = PORTAL_TAGS.filter((t) => all.some((l) => l.tags.includes(t)));
+  const tag = state.portal.tag === "★" || tags.includes(state.portal.tag) ? state.portal.tag : "";
+  const chip = (value, label) =>
+    el("button", {
+      type: "button",
+      class: "chip",
+      "aria-pressed": String(tag === value),
+      onclick: () => {
+        state.portal.tag = value;
+        portalExpanded = false;
+        saveState();
+        renderPortal();
+      },
+    }, label);
+  $("#portal-tags").replaceChildren(chip("", "すべて"), chip("★", "★ お気に入り"), ...tags.map((t) => chip(t, t)));
+
+  const hits = all.filter((l) => (tag === "★" ? state.portal.stars.includes(l.id) : !tag || l.tags.includes(tag)));
+  const shown = tag || portalExpanded ? hits : hits.slice(0, PORTAL_PAGE);
+  $("#portal-count").textContent = `${hits.length} 件`;
+  $("#portal-list").replaceChildren(
+    ...(shown.length ? shown.map(portalRow) : [el("p", { class: "empty" }, tag === "★" ? "☆ を押すとここに集まります。" : "該当するリンクはありません。")])
+  );
+  const more = $("#portal-more");
+  more.hidden = shown.length === hits.length;
+  more.textContent = `すべて表示（あと ${hits.length - shown.length} 件）`;
+}
+
+function portalRow(l) {
+  const starred = state.portal.stars.includes(l.id);
+  return el("div", { class: "portal-row" },
+    el("a", {
+      class: "link-tile",
+      href: portalUrl(l),
+      target: "_blank",
+      rel: "noopener noreferrer",
+      onclick: () => {
+        state.portal.uses[l.id] = (state.portal.uses[l.id] || 0) + 1;
+        saveState();
+      },
+    },
+      el("span", { class: "name" }, l.name),
+      el("span", { class: "desc" }, l.tags.join("・")),
+      l.url ? null : el("span", { class: "badge via", title: "ポータルのトップを開きます。サイトマップからたどってください" }, "ポータルから")
+    ),
+    el("button", {
+      type: "button",
+      class: `star${starred ? " on" : ""}`,
+      "aria-pressed": String(starred),
+      "aria-label": starred ? "お気に入りから外す" : "お気に入りにする",
+      onclick: () => {
+        state.portal.stars = starred ? state.portal.stars.filter((x) => x !== l.id) : [...state.portal.stars, l.id];
+        saveState();
+        renderPortal();
+      },
+    }, starred ? "★" : "☆")
+  );
+}
+
+$("#portal-more").addEventListener("click", () => {
+  portalExpanded = true;
+  renderPortal();
+});
+
+// ホームのリンクを押したら、そのパネルの回数を数える（自動の並び順に使う）
+$("#home-panels").addEventListener("click", (e) => {
+  const card = e.target.closest("a[href]") && e.target.closest("[data-panel]");
+  if (!card) return;
+  const key = card.dataset.panel;
+  state.panelUses[key] = (state.panelUses[key] || 0) + 1;
+  saveState();
+});
 
 // パネルの編集ダイアログ。id が null なら新しいパネル
 let editingPanelId = null;
@@ -456,6 +566,8 @@ $("#clear-done").addEventListener("click", async () => {
 function syncSettingsForm() {
   $("#show-sat").checked = state.settings.showSat;
   $("#period-count").value = String(state.settings.periodCount);
+  $("#show-staff").checked = state.settings.showStaff;
+  $("#auto-order").checked = state.settings.autoOrder;
 }
 syncSettingsForm();
 
@@ -468,6 +580,26 @@ $("#period-count").addEventListener("change", (e) => {
   state.settings.periodCount = Number(e.target.value);
   saveState();
   renderTimetable();
+});
+
+$("#show-staff").addEventListener("change", (e) => {
+  state.settings.showStaff = e.target.checked;
+  saveState();
+  renderPortal();
+});
+$("#auto-order").addEventListener("change", (e) => {
+  state.settings.autoOrder = e.target.checked;
+  saveState();
+  renderHome();
+  renderPanelSettings();
+});
+$("#portal-reset-uses").addEventListener("click", async () => {
+  if (!(await askConfirm("リンクとパネルを押した回数をリセットします（★ はそのまま）。", "リセット"))) return;
+  state.portal.uses = {};
+  state.panelUses = {};
+  saveState();
+  renderHome();
+  toast("押した回数をリセットしました。");
 });
 
 $("#export-btn").addEventListener("click", () => {
@@ -494,7 +626,7 @@ $("#copy-btn").addEventListener("click", async () => {
 
 function applyImported(data) {
   if (typeof data !== "object" || !data || !data.timetable || !Array.isArray(data.tasks)) throw new Error("フクメモのデータではありません");
-  state = { ...defaultState(), ...data, settings: { ...defaultState().settings, ...data.settings } };
+  state = mergeState(data);
   saveState();
   syncSettingsForm();
   renderAll();
