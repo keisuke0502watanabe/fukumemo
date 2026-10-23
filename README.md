@@ -3,6 +3,8 @@
 福岡大学生向けの**非公式**リンク集・時間割・課題メモ。**福岡大学非公認**。
 徳島大学の「トクメモ」を参考にしたもの。開発：渡邊 啓介（理学部化学科）。
 
+**公開版：https://keisuke0502watanabe.github.io/fukumemo/**（GitHub Pages。`main` に push すると 1 分ほどで反映される）
+
 ## いまできること（v0.3.0）
 - **ホーム**：今日の授業、締切が近い課題、よく使うリンク、自分で作ったパネル
   - 「＋ パネルを追加」で、名前＋URL のリンクをまとめたパネルを作れる（ポータルのよく使う画面、Moodle の授業ページなど）
@@ -29,11 +31,16 @@
 cd ~/Projects/fukumemo && python3 -m http.server 8765
 ```
 
-ブラウザで http://localhost:8765 を開く。スマホで試すには HTTPS で公開する必要がある（GitHub Pages など）。
+ブラウザで http://localhost:8765 を開く。
+
+### 公開（GitHub Pages）
+https://keisuke0502watanabe.github.io/fukumemo/ で公開している（2026-10-23 から。リポジトリは公開）。
+`main` ブランチのルートをそのまま配信するので、`git push origin main` だけで更新される。
+スマホではこの URL を開いてホーム画面に追加すると、アプリのように開ける（オフラインでも動く）。
 
 ### Artifact 版（共有用）
 `python3 build_artifact.py` で `dist/fukumemo.html`（1 ファイルにまとめた版）を作る。
-公開先：https://claude.ai/artifact/DBTubSSQeiUEgFLz3yeaH1
+公開先：https://claude.ai/artifact/DBTubSSQeiUEgFLz3yeaH1（v0.1.0 のまま。最新は上の GitHub Pages 版）
 Artifact では Service Worker・ファイルの書き出しが使えないため、「データをコピー」で代用する。
 
 ## ファイル
@@ -58,5 +65,5 @@ Artifact では Service Worker・ファイルの書き出しが使えないた�
 ## 次の候補
 - 公開情報の表示（利用条件を確認してから。取得は控えめに）
 - 時間割のメモ欄をホームに出す、授業ごとの課題の絞り込み
-- 公開（GitHub Pages）と学生への試用
+- 学生への試用（GitHub Pages で公開済み）
 - iOS アプリ版（WKWebView＋Keychain）は別途
